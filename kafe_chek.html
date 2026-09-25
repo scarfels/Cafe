@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Кафе - чек</title>
+<style>
+  body {
+    background-color: #fff2cc;
+    font-family: Comic Sans MS, Arial, sans-serif;
+    text-align: center;
+  }
+  h1 {
+    color: #cc3333;
+    font-size: 40px;
+  }
+  .box {
+    background-color: white;
+    border: 5px solid #cc3333;
+    border-radius: 20px;
+    width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  input {
+    width: 150px;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 10px;
+    border: 2px solid #cc3333;
+  }
+  button {
+    background-color: #33aa33;
+    color: white;
+    font-size: 18px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 15px;
+    margin: 10px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #248824;
+  }
+  #spisok {
+    text-align: left;
+    margin: 10px;
+  }
+  #chek {
+    background-color: #ffffcc;
+    border: 3px dashed #cc3333;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: left;
+    margin-top: 20px;
+    white-space: pre-wrap;
+    font-family: monospace;
+  }
+  .smile {
+    font-size: 30px;
+  }
+</style>
+</head>
+<body>
+
+  <h1>🍔 Наше кафе 🍟</h1>
+  <p class="smile">Считаем чек за 3 секунды!</p>
+
+  <div class="box">
+
+    <p>Номер стола:</p>
+    <input type="number" id="stol" placeholder="напр. 5">
+
+    <hr>
+
+    <p>Добавь блюдо:</p>
+    <input type="text" id="nazvanie" placeholder="название">
+    <br>
+    <input type="number" id="cena" placeholder="цена ₸">
+    <input type="number" id="kolvo" placeholder="кол-во">
+    <br>
+    <button onclick="dobavitBlyudo()">➕ Добавить блюдо</button>
+
+    <div id="spisok">
+      <b>Список заказа:</b>
+      <ul id="ulSpisok"></ul>
+    </div>
+
+    <button onclick="schitatChek()">🧮 Посчитать чек</button>
+    <button onclick="sohranitChek()">💾 Сохранить в check.txt</button>
+
+    <div id="chek"></div>
+
+  </div>
+
+<script>
+  // тут просто храним заказ в обычном массиве
+  var zakaz = []; // каждый элемент это {nazvanie, cena, kolvo}
+
+  // константы прям как учили на уроке
+  var SKIDKA_POROG = 10000; // если сумма больше этого - скидка
+  var SKIDKA_PROCENT = 0.05; // скидка 5%
+  var OBSLUZH_PROCENT = 0.10; // обслуживание 10%
+
+  var poslednijChek = ""; // тут будем хранить текст чека для сохранения
+
+  function dobavitBlyudo() {
+    var nazvanie = document.getElementById("nazvanie").value;
+    var cena = Number(document.getElementById("cena").value);
+    var kolvo = Number(document.getElementById("kolvo").value);
+
+    // проверка ошибок как в задании написано
+    if (nazvanie == "" || cena <= 0 || kolvo <= 0) {
+      alert("Ой! Заполни название, цену и количество правильно :(");
+      return;
+    }
+
+    zakaz.push({ nazvanie: nazvanie, cena: cena, kolvo: kolvo });
+
+    // очищаем поля ввода
+    document.getElementById("nazvanie").value = "";
+    document.getElementById("cena").value = "";
+    document.getElementById("kolvo").value = "";
+
+    pokazatSpisok();
+  }
+
+  function pokazatSpisok() {
+    var ul = document.getElementById("ulSpisok");
+    ul.innerHTML = "";
+    for (var i = 0; i < zakaz.length; i++) {
+      var blyudo = zakaz[i];
+      var summaStroki = blyudo.cena * blyudo.kolvo;
+      var li = document.createElement("li");
+      li.innerHTML = blyudo.nazvanie + " x" + blyudo.kolvo + " = " + summaStroki + " ₸";
+      ul.appendChild(li);
+    }
+  }
+
+  function schitatChek() {
+    var stol = document.getElementById("stol").value;
+
+    if (stol == "") {
+      alert("Напиши номер стола!");
+      return;
+    }
+    if (zakaz.length == 0) {
+      alert("Заказ пустой, нечего считать!");
+      return;
+    }
+
+    // считаем сумму заказа (шаг 2 из задания)
+    var summa = 0;
+    for (var i = 0; i < zakaz.length; i++) {
+      summa = summa + zakaz[i].cena * zakaz[i].kolvo;
+    }
+
+    // скидка если сумма больше 10000 (шаг 3)
+    var skidka = 0;
+    if (summa > SKIDKA_POROG) {
+      skidka = summa * SKIDKA_PROCENT;
+    }
+
+    var summaPosleSkidki = summa - skidka;
+
+    // обслуживание 10% (шаг 4)
+    var obsluzhivanie = summaPosleSkidki * OBSLUZH_PROCENT;
+
+    var itog = summaPosleSkidki + obsluzhivanie;
+
+    // делаем текст чека
+    var text = "========= ЧЕК =========\n";
+    text += "Стол №" + stol + "\n";
+    text += "------------------------\n";
+    for (var i = 0; i < zakaz.length; i++) {
+      var b = zakaz[i];
+      text += b.nazvanie + " x" + b.kolvo + " = " + (b.cena * b.kolvo) + " ₸\n";
+    }
+    text += "------------------------\n";
+    text += "Сумма: " + summa + " ₸\n";
+    text += "Скидка: -" + skidka.toFixed(0) + " ₸\n";
+    text += "Обслуживание (+10%): " + obsluzhivanie.toFixed(0) + " ₸\n";
+    text += "ИТОГО: " + itog.toFixed(0) + " ₸\n";
+    text += "========================\n";
+    text += "Спасибо, приходите ещё! 😊";
+
+    document.getElementById("chek").innerText = text;
+
+    poslednijChek = text; // запоминаем чтобы сохранить в файл
+  }
+
+  function sohranitChek() {
+    if (poslednijChek == "") {
+      alert("Сначала нажми Посчитать чек!");
+      return;
+    }
+
+    // сайт не может сам писать в файл на компьютере,
+    // поэтому мы просто скачиваем check.txt как файл
+    var blob = new Blob([poslednijChek], { type: "text/plain" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "check.txt";
+    link.click();
+  }
+</script>
+
+</body>
+</html>
